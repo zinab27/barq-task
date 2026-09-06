@@ -1,0 +1,42 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax and compose checks
+        run: |
+          python3 -m py_compile validate.py failure_test.py app/server.py
+          bash -n backup.sh
+          bash -n restore.sh
+          docker compose version
+          docker compose config
+      - name: Build and start
+        run: docker compose up -d --build
+      - name: Wait for readiness
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/ready | grep -q '"status": "ready"'; then
+              echo "ready after ${i}x2s"; exit 0
+            fi
+            sleep 2
+          done
+          echo "environment never became ready"; docker compose ps; docker compose logs --tail=50; exit 1
+      - name: Validate
+        run: python3 validate.py
+      - name: Failure test
+        run: python3 failure_test.py
+      - name: Image scan (informational)
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+      - name: Collect logs on failure
+        if: failure()
+        run: docker compose ps; docker compose logs --tail=100

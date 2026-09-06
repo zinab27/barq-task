@@ -155,3 +155,21 @@
 - Retest evidence: (pending) `docker ps --format '{{.Names}} {{.Ports}}'` shows only `127.0.0.1:8080->80` on nginx.
 - Related commit: (pending fix commit)
 - Remaining uncertainty: None.
+
+## Entry 10: App binds 127.0.0.1 — NGINX can never reach it (502) 
+- Date: 2026-09-06, verified with live `curl http://127.0.0.1:8080/ready` → `502 Bad Gateway nginx/1.28.3`
+- Symptom: Flask says running but NGINX always 502. `127.0.0.1` = self-only. Each container has its own loopback, so app-01 on `127.0.0.1` is deaf to nginx.
+- Hypothesis: `APP_HOST=127.0.0.1` forces loopback. Must be `0.0.0.0` (= accept from other containers).
+- Command or test:
+  ```bash
+  grep -n "APP_HOST" docker-compose.yml
+  grep -n "app.run\|APP_HOST" app/server.py
+  curl -v http://127.0.0.1:8080/ready
+  # -> 502 Bad Gateway (proves it)
+  ```
+- Actual output: Compose forced loopback, public curl returned 502 page even though `docker ps` showed app up, `whoami=app`, pg data OK.
+- Root cause: `docker-compose.yml` `APP_HOST: "127.0.0.1"`.
+- Fix: Change to `APP_HOST: "0.0.0.0"`. Rebuild: `docker compose up -d --build`.
+- Retest evidence: (pending after rebuild) `curl http://127.0.0.1:8080/ready` → 200 `ready`, `wget -qO- http://app-01:8080/health` from nginx → alive.
+- Related commit: (pending fix commit)
+- Remaining uncertainty: None.

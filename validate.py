@@ -11,7 +11,7 @@ import urllib.request
 BASE = os.environ.get("BASE_URL", "http://127.0.0.1:8080").rstrip("/")
 TIMEOUT = int(os.environ.get("VALIDATE_TIMEOUT", "5"))
 WAIT_SECS = int(os.environ.get("VALIDATE_WAIT", "90"))
-REQUIRED_INSTANCES = {"app-01", "app-02"}
+REQUIRED_INSTANCES = set(os.environ.get("VALIDATE_INSTANCES", "app-01,app-02").split(","))
 EXPECTED_NETWORKS = {
     "app-01": {"frontend", "backend"},
     "app-02": {"frontend", "backend"},

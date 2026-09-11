@@ -28,9 +28,9 @@ jobs:
           done
           echo "environment never became ready"; docker compose ps; docker compose logs --tail=50; exit 1
       - name: Validate
-        run: python3 validate.py
+        run: BASE_URL=http://127.0.0.1:8090 VALIDATE_INSTANCES=app-01,app-02,app-03 python3 validate.py
       - name: Failure test
-        run: python3 failure_test.py
+        run: BASE_URL=http://127.0.0.1:8090 FAILURE_EXPECTED=app-01,app-02,app-03 python3 failure_test.py
       - name: Image scan (informational)
         uses: aquasecurity/trivy-action@master
         continue-on-error: true

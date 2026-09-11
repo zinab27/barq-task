@@ -21,7 +21,7 @@ jobs:
       - name: Wait for readiness
         run: |
           for i in $(seq 1 60); do
-            if python3 -c "import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:8080/ready',timeout=5)); raise SystemExit(0 if d.get('status')=='ready' else 1)" 2>/dev/null; then
+            if python3 -c "import json,urllib.request; d=json.load(urllib.request.urlopen('http://127.0.0.1:8090/ready',timeout=5)); raise SystemExit(0 if d.get('status')=='ready' else 1)" 2>/dev/null; then
               echo "ready after ${i}x2s"; exit 0
             fi
             sleep 2

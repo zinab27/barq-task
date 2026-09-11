@@ -13,6 +13,7 @@ VICTIM = os.environ.get("FAILURE_VICTIM", "app-02")
 TIMEOUT = int(os.environ.get("FAILURE_TIMEOUT", "5"))
 WAIT_SECS = int(os.environ.get("FAILURE_WAIT", "90"))
 BASELINE_N = int(os.environ.get("FAILURE_BASELINE_N", "10"))
+EXPECTED = set(os.environ.get("FAILURE_EXPECTED", "app-01,app-02").split(","))
 DURING_N = int(os.environ.get("FAILURE_DURING_N", "30"))
 AFTER_N = int(os.environ.get("FAILURE_AFTER_N", "20"))
 MIN_SUCCESS_RATE = float(os.environ.get("FAILURE_MIN_RATE", "0.95"))
@@ -81,7 +82,7 @@ def main():
         return 1
 
     ok, err, seen = burst(BASELINE_N)
-    check("baseline", err == 0 and seen == {"app-01", "app-02"},
+    check("baseline", err == 0 and seen == EXPECTED,
           f"sent={BASELINE_N} ok={ok} errors={err} instances={sorted(seen)}")
 
     try:
